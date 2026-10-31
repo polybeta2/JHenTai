@@ -48,6 +48,13 @@ mixin SearchPageMixin<L extends SearchPageLogicMixin, S extends SearchPageStateM
         padding: buttonPadding,
       ),
       IconButton(
+        icon: const Icon(Icons.casino_outlined),
+        onPressed: logic.handleTapRandomJumpButton,
+        visualDensity: visualDensity,
+        constraints: buttonConstraints,
+        padding: buttonPadding,
+      ),
+      IconButton(
         icon: Icon(state.bodyType == SearchPageBodyType.galleries ? Icons.search : Icons.image_outlined),
         onPressed: logic.toggleBodyType,
         visualDensity: visualDensity,

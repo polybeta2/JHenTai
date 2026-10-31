@@ -115,6 +115,8 @@ class zh_CN {
       'tabBarSetting': '标签栏设置',
       'refreshGalleryFailed': '刷新画廊失败',
       'jumpPageTo': '跳转页面至',
+      'randomSeek': '随机探索',
+      'randomSeekLanded': '已随机跳转到%s',
       'range': '范围',
       'current': '当前',
       'galleryUrlDetected': '剪切板里发现画廊链接',

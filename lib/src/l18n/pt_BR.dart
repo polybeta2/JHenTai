@@ -116,6 +116,8 @@ class pt_BR {
       'refreshGalleryFailed': 'Falha ao Atualizar galerias',
       'tabBarSetting': 'Opções da barra de abas',
       'jumpPageTo': 'Pular para à página',
+      'randomSeek': 'Explorar aleatoriamente',
+      'randomSeekLanded': 'Salto aleatório para %s',
       'range': 'Alcance',
       'current': 'Atual',
       'galleryUrlDetected': 'URL de galeria encontrada na área de transferência',

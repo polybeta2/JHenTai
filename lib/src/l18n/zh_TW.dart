@@ -115,6 +115,8 @@ class zh_TW {
       'tabBarSetting': '標籤欄設定',
       'refreshGalleryFailed': '重新整理畫廊失敗',
       'jumpPageTo': '跳轉頁面至',
+      'randomSeek': '隨機探索',
+      'randomSeekLanded': '已隨機跳轉到%s',
       'range': '範圍',
       'current': '目前',
       'galleryUrlDetected': '剪貼簿裡發現畫廊連結',

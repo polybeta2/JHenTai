@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:jhentai/src/enum/config_enum.dart';
 import 'package:jhentai/src/extension/dio_exception_extension.dart';
 import 'package:jhentai/src/extension/get_logic_extension.dart';
@@ -19,6 +21,7 @@ import '../../exception/eh_site_exception.dart';
 import '../../mixin/scroll_to_top_logic_mixin.dart';
 import '../../mixin/scroll_to_top_state_mixin.dart';
 import '../../model/gallery.dart';
+import '../../model/gallery_count.dart';
 import '../../network/eh_request.dart';
 import '../../routes/routes.dart';
 import '../../service/local_block_rule_service.dart';
@@ -357,6 +360,33 @@ abstract class BasePageLogic extends GetxController with Scroll2TopLogicMixin {
     if (dateTime != null) {
       jumpPage(dateTime);
     }
+  }
+
+  /// E-Hentai only orders search results by published time, so a random seek date
+  /// equals a random landing point on the result timeline.
+  Future<void> handleTapRandomJumpButton() async {
+    const int maxAttempts = 3;
+
+    DateTime landedDate = DateTime.now();
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      landedDate = _randomSeekDate();
+      await jumpPage(landedDate);
+
+      /// Re-roll when the landing finds nothing, unless the query itself has no
+      /// result at all or the request failed.
+      bool queryHasNoResult = state.totalCount?.type == GalleryCountType.accurate && int.tryParse(state.totalCount!.count ?? '') == 0;
+      if (state.galleries.isNotEmpty || queryHasNoResult || state.loadingState == LoadingState.error) {
+        break;
+      }
+    }
+
+    toast('randomSeekLanded'.trArgs([DateFormat('yyyy-MM-dd').format(landedDate)]), isCenter: false);
+  }
+
+  DateTime _randomSeekDate() {
+    final DateTime firstDate = DateTime(2007);
+    final int totalDays = DateTime.now().difference(firstDate).inDays;
+    return firstDate.add(Duration(days: Random().nextInt(totalDays + 1)));
   }
 
   Future<void> handleTapFilterButton([EHSearchConfigDialogType searchConfigDialogType = EHSearchConfigDialogType.filter]) async {

@@ -115,6 +115,8 @@ class en_US {
       'refreshGalleryFailed': 'Refresh Gallery Failed',
       'tabBarSetting': 'TabBar Setting',
       'jumpPageTo': 'Jump Page To',
+      'randomSeek': 'Random Seek',
+      'randomSeekLanded': 'Randomly jumped to %s',
       'range': 'Range',
       'current': 'Current',
       'galleryUrlDetected': 'Found Gallery Url in Clipboard',

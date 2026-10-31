@@ -115,6 +115,8 @@ class ko_KR {
       'refreshGalleryFailed': '갤러리 새로고침 실패',
       'tabBarSetting': '탭 바 설정',
       'jumpPageTo': '페이지 이동: ',
+      'randomSeek': '랜덤 탐색',
+      'randomSeekLanded': '%s(으)로 랜덤 이동했습니다',
       'range': '범위',
       'current': '현재',
       'galleryUrlDetected': '클립보드에서 갤러리 URL을 찾았습니다.',

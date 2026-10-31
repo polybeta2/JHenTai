@@ -117,6 +117,8 @@ class ru_RU {
       'refreshGalleryFailed': 'Не удалось обновить галерею',
       'tabBarSetting': 'Настройка панели вкладок',
       'jumpPageTo': 'Перейти к странице',
+      'randomSeek': 'Случайный поиск',
+      'randomSeekLanded': 'Случайный переход к %s',
       'range': 'Диапазон',
       'current': 'Текущая',
       'galleryUrlDetected': 'URL галереи найден в буфере обмена',
