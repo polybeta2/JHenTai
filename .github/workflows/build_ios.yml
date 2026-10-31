@@ -1,0 +1,118 @@
+name: Build iOS
+
+# 手动触发；可选：勾选后同时创建 Release 并附带 ipa
+on:
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: '同时创建 GitHub Release 并上传 ipa'
+        type: boolean
+        required: false
+        default: false
+
+# 同一分支重复触发时取消旧任务
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  Build:
+    runs-on: macos-latest
+    env:
+      FLUTTER_VERSION: 3.44.8
+    steps:
+      # Checkout 代码
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 缓存 CocoaPods 依赖，加速后续构建
+      - name: Cache Pods
+        uses: actions/cache@v3
+        with:
+          key: ios-pods-${{ hashFiles('ios/Podfile.lock') }}
+          path: ios/Pods
+
+      # 安装 Flutter（与上游 CI 保持一致）
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'master'
+          cache: true
+
+      - name: Output Flutter Version
+        run: flutter --version
+
+      # Fork 中若配置了 JH_API_SECRET_CONFIG 则写入，未配置则保留仓库内置占位文件
+      - name: Setup JHenTai API Secret (optional)
+        env:
+          JH_API_SECRET_CONFIG: ${{ secrets.JH_API_SECRET_CONFIG }}
+        run: |
+          if [ -n "$JH_API_SECRET_CONFIG" ]; then
+            echo "$JH_API_SECRET_CONFIG" > lib/src/config/jh_api_secret_config.dart
+            echo "JH_API_SECRET_CONFIG found, applied."
+          else
+            echo "JH_API_SECRET_CONFIG not set, using built-in placeholder."
+          fi
+
+      # 拉取 Dart 依赖
+      - name: Flutter Pub Get
+        run: |
+          git config --global core.longpaths true
+          flutter pub get
+
+      # 解析 Xcode SPM 依赖
+      - name: Resolve Xcode package dependencies
+        run: xcodebuild -resolvePackageDependencies -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release
+
+      # 预下载 iOS 构建工件
+      - name: Flutter precache (iOS)
+        run: flutter precache --ios
+
+      # 更新 CocoaPods 依赖
+      - name: Pod update
+        run: |
+          cd ios
+          pod update
+
+      # 构建 iOS（免签名，产物为未签名 ipa，可用 AltStore / Sideloadly / TrollStore 等自签安装）
+      - name: Build iOS (unsigned)
+        run: |
+          flutter build ios -t lib/src/main.dart --release --no-codesign
+          sh thin-payload.sh build/ios/iphoneos/*.app
+
+      # 打包为 ipa
+      - name: Package IPA
+        id: package
+        run: |
+          VERSION=$(head -n 5 pubspec.yaml | tail -n 1 | cut -d ' ' -f 2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          cd build
+          mkdir -p Payload
+          mv ios/iphoneos/*.app Payload
+          zip -9 JHenTai_${VERSION}.ipa -r Payload
+          ls -lh JHenTai_${VERSION}.ipa
+
+      # 上传构建产物（在 Actions 运行页面下载）
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JHenTai-iOS-${{ steps.package.outputs.version }}
+          path: build/*.ipa
+          if-no-files-found: error
+
+      # 可选：创建 Release 并附带 ipa
+      - name: Create Release
+        if: ${{ inputs.create_release }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.package.outputs.version }}-ios
+          allowUpdates: true
+          makeLatest: true
+          body: |
+            JHenTai iOS (unsigned) ${{ steps.package.outputs.version }}
+
+            > 未签名 ipa，请使用 AltStore / Sideloadly / TrollStore 等工具自签安装。
+          artifacts: build/*.ipa
+          artifactErrorsFailBuild: true
+          replacesArtifacts: true
