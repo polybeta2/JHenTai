@@ -693,6 +693,8 @@ class zh_CN {
       'watched': '关注',
       'history': '历史',
       'keyword': '关键词',
+      'excludeTags': '排除标签',
+      'excludeTagsHint': '输入标签后回车添加，如 female:futanari',
       'orderBy': '排序',
       'favoritedTime': '收藏时间',
       'publishedTime': '发布时间',

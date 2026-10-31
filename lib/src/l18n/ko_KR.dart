@@ -693,6 +693,8 @@ class ko_KR {
       'watched': '시청 기록',
       'history': '방문 기록',
       'keyword': '키워드',
+      'excludeTags': '제외 태그',
+      'excludeTagsHint': '태그 입력 후 엔터를 눌러 추가, 예: female:futanari',
       'orderBy': 'Order by',
       'favoritedTime': 'Favorited Time',
       'publishedTime': 'Published Time',

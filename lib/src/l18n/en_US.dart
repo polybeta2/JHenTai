@@ -693,6 +693,8 @@ class en_US {
       'watched': 'Watched',
       'history': 'History',
       'keyword': 'Keyword',
+      'excludeTags': 'Exclude Tags',
+      'excludeTagsHint': 'Type a tag and press enter, e.g. female:futanari',
       'orderBy': 'Order by',
       'favoritedTime': 'Favorited Time',
       'publishedTime': 'Published Time',

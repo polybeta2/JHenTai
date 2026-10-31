@@ -22,10 +22,12 @@ import '../config/ui_config.dart';
 import '../consts/locale_consts.dart';
 import '../database/database.dart';
 import '../model/eh_raw_tag.dart';
+import '../model/gallery_tag.dart';
 import '../network/eh_request.dart';
 import '../utils/eh_spider_parser.dart';
 import '../service/log.dart';
 import 'eh_gallery_category_tag.dart';
+import 'eh_tag.dart';
 
 enum EHSearchConfigDialogType { update, add, filter }
 
@@ -56,6 +58,11 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
   FocusNode focusNode = FocusNode();
   bool isDoubleBackspace = false;
 
+  LayerLink excludeLayerLink = LayerLink();
+  FocusNode excludeFocusNode = FocusNode();
+  TextEditingController excludeTextController = TextEditingController();
+  bool isDoubleBackspaceForExcludeTag = false;
+
   @override
   void initState() {
     super.initState();
@@ -77,13 +84,15 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
     overlayEntry?.remove();
     overlayEntry?.dispose();
     focusNode.dispose();
+    excludeFocusNode.dispose();
+    excludeTextController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       child: Container(
-        height: searchConfig.searchType == SearchType.favorite ? 400 : 500,
+        height: searchConfig.searchType == SearchType.favorite ? 400 : 580,
         width: 200,
         padding: const EdgeInsets.only(top: 24, bottom: 24, left: 12, right: 12),
         child: Column(
@@ -147,6 +156,7 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
               children: [
                 _buildCategoryTags().marginOnly(top: 20),
                 _buildKeywordTextField().marginOnly(top: 12),
+                _buildExcludeTagsField().marginOnly(top: 20),
                 _buildLanguageSelector().marginOnly(top: 20),
                 _buildSearchExpungedGalleriesSwitch(),
                 _buildOnlySearchGalleriesWithTorrentsSwitch(),
@@ -284,11 +294,11 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
     );
   }
 
-  OverlayEntry _buildSuggestions(String keyword) {
+  OverlayEntry _buildSuggestions(String keyword, {LayerLink? link, ValueChanged<TagData>? onTapTag}) {
     return OverlayEntry(
       builder: (BuildContext overlayContext) => UnconstrainedBox(
         child: CompositedTransformFollower(
-          link: layerLink,
+          link: link ?? layerLink,
           targetAnchor: Alignment.bottomLeft,
           followerAnchor: Alignment.topLeft,
           child: Material(
@@ -309,6 +319,10 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
                 suggestions: suggestions,
                 onTapSuggestion: (TagData tagData) {
                   hideSuggestions();
+                  if (onTapTag != null) {
+                    onTapTag(tagData);
+                    return;
+                  }
                   searchConfig.keyword = '';
                   addSearchTag(tagData);
                 },
@@ -739,17 +753,17 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
   }
 
   /// search only if there's no timer active (300ms)
-  Future<void> waitAndSearchTags(String keyword) async {
+  Future<void> waitAndSearchTags(String keyword, {LayerLink? link, ValueChanged<TagData>? onTapTag}) async {
     if (keyword.isEmpty) {
       hideSuggestions();
       return;
     }
 
     /// only search after 300ms
-    debouncing.debounce(() => searchTags(keyword));
+    debouncing.debounce(() => searchTags(keyword, link: link, onTapTag: onTapTag));
   }
 
-  Future<void> searchTags(String keyword) async {
+  Future<void> searchTags(String keyword, {LayerLink? link, ValueChanged<TagData>? onTapTag}) async {
     log.info('search for ${searchConfig.keyword}');
 
     /// chinese => database; other => EH api
@@ -793,15 +807,15 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
       }
     }
 
-    showSuggestions(keyword);
+    showSuggestions(keyword, link: link, onTapTag: onTapTag);
   }
 
-  void showSuggestions(String keyword) {
+  void showSuggestions(String keyword, {LayerLink? link, ValueChanged<TagData>? onTapTag}) {
     if (_isShowingSuggestions) {
       overlayEntry?.remove();
     }
 
-    overlayEntry = _buildSuggestions(keyword);
+    overlayEntry = _buildSuggestions(keyword, link: link, onTapTag: onTapTag);
     Overlay.of(context).insert(overlayEntry!);
 
     _isShowingSuggestions = true;
@@ -822,6 +836,130 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
     setState(() {
       searchConfig.tags!.add(tag);
     });
+  }
+
+  Widget _buildExcludeTagsField() {
+    return CompositedTransformTarget(
+      link: excludeLayerLink,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          KeyboardListener(
+            focusNode: excludeFocusNode,
+            onKeyEvent: _handleDeleteExcludeTag,
+            child: TextField(
+              decoration: InputDecoration(
+                isDense: true,
+                alignLabelWithHint: true,
+                labelText: 'excludeTags'.tr,
+                labelStyle: const TextStyle(fontSize: 12),
+                helperText: searchConfig.computeExcludeTagKeywords(withTranslation: true, separator: '  /  '),
+                helperMaxLines: 99,
+                hintText: searchConfig.excludeTags?.isEmpty ?? true ? 'excludeTagsHint'.tr : 'backspace2DeleteTag'.tr,
+                hintStyle: TextStyle(fontSize: 12, color: UIConfig.searchConfigDialogFieldHintTextColor(context)),
+              ),
+              controller: excludeTextController,
+              onTap: hideSuggestions,
+              onChanged: (keyword) => waitAndSearchTags(keyword, link: excludeLayerLink, onTapTag: addExcludeTag),
+              onSubmitted: (keyword) {
+                hideSuggestions();
+                _addExcludeTagFromRawKeyword(keyword);
+              },
+            ),
+          ),
+          if (searchConfig.excludeTags?.isNotEmpty ?? false)
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [for (TagData tag in searchConfig.excludeTags!) _buildExcludeTagChip(tag)],
+            ).marginOnly(top: 6),
+        ],
+      ),
+    );
+  }
+
+  /// red minus icon + tag chip, to distinguish from positive tags visually
+  Widget _buildExcludeTagChip(TagData tag) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.remove, size: 14, color: UIConfig.alertColor(context)),
+        EHTag(
+          tag: GalleryTag(tagData: tag, color: UIConfig.alertColor(context)),
+          inDeleteMode: true,
+          onTap: (_) => setState(() => searchConfig.excludeTags!.remove(tag)),
+        ).marginOnly(left: 2),
+      ],
+    );
+  }
+
+  /// parse manually inputed tag like `female:futanari` / `f:futanari` / `futanari`
+  void _addExcludeTagFromRawKeyword(String keyword) {
+    String tag = keyword.trim();
+    if (tag.startsWith('-')) {
+      tag = tag.substring(1);
+    }
+    if (tag.endsWith(r'$')) {
+      tag = tag.substring(0, tag.length - 1);
+    }
+    if (tag.isEmpty) {
+      return;
+    }
+
+    int namespaceSeparatorIndex = tag.indexOf(':');
+    TagData tagData;
+    if (namespaceSeparatorIndex > 0 && namespaceSeparatorIndex < tag.length - 1) {
+      tagData = TagData(namespace: tag.substring(0, namespaceSeparatorIndex), key: tag.substring(namespaceSeparatorIndex + 1));
+    } else {
+      tagData = TagData(namespace: '', key: tag);
+    }
+
+    _translateAndAddExcludeTag(tagData);
+    excludeTextController.clear();
+  }
+
+  Future<void> _translateAndAddExcludeTag(TagData tagData) async {
+    if (tagData.namespace.isEmpty) {
+      addExcludeTag(tagData);
+      return;
+    }
+
+    TagData? translated = await tagTranslationService.getTagTranslation(tagData.namespace, tagData.key);
+    addExcludeTag(translated ?? tagData);
+  }
+
+  void addExcludeTag(TagData tag) {
+    searchConfig.excludeTags ??= [];
+    if (searchConfig.excludeTags!.singleWhereOrNull((t) => t.namespace == tag.namespace && t.key == tag.key) != null) {
+      return;
+    }
+
+    setState(() {
+      searchConfig.excludeTags!.add(tag);
+    });
+  }
+
+  /// double backspace to delete last exclude tag
+  void _handleDeleteExcludeTag(KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.backspace) {
+      return;
+    }
+    if (excludeTextController.text.isNotEmpty) {
+      return;
+    }
+    if (searchConfig.excludeTags?.isEmpty ?? true) {
+      return;
+    }
+    if (!isDoubleBackspaceForExcludeTag) {
+      isDoubleBackspaceForExcludeTag = true;
+      return;
+    }
+    isDoubleBackspaceForExcludeTag = false;
+    setState(() => searchConfig.excludeTags!.removeLast());
   }
 
   void checkAndBack() {

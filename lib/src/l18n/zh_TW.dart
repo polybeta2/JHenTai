@@ -693,6 +693,8 @@ class zh_TW {
       'watched': '關注',
       'history': '歷史紀錄',
       'keyword': '關鍵字',
+      'excludeTags': '排除標籤',
+      'excludeTagsHint': '輸入標籤後送出添加，如 female:futanari',
       'orderBy': '排序',
       'favoritedTime': '收藏時間',
       'publishedTime': '發表時間',

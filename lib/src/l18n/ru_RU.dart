@@ -702,6 +702,8 @@ class ru_RU {
       'watched': 'Отслеживаемое',
       'history': 'История',
       'keyword': 'Ключевое слово',
+      'excludeTags': 'Исключить теги',
+      'excludeTagsHint': 'Введите тег и нажмите Enter, напр. female:futanari',
       'orderBy': 'Сортировать по',
       'favoritedTime': 'Времени добавления в избранное',
       'publishedTime': 'Времени публикации',

@@ -30,6 +30,9 @@ class SearchConfig {
   /// i have to admit this field is an awful design
   List<TagData>? tags;
 
+  /// tags to exclude from search results, rendered as `-namespace:"key$"` in f_search
+  List<TagData>? excludeTags;
+
   String? language;
 
   bool onlySearchExpungedGalleries = false;
@@ -61,6 +64,7 @@ class SearchConfig {
     this.includeMisc = true,
     this.keyword,
     this.tags,
+    this.excludeTags,
     this.language,
     this.onlySearchExpungedGalleries = false,
     this.onlyShowGalleriesWithTorrents = false,
@@ -87,6 +91,7 @@ class SearchConfig {
     this.includeMisc = false,
     this.keyword,
     this.tags,
+    this.excludeTags,
     this.language,
     this.onlySearchExpungedGalleries = false,
     this.onlyShowGalleriesWithTorrents = false,
@@ -151,6 +156,11 @@ class SearchConfig {
 
     if (language != null) {
       params['f_search'] = (params['f_search'] ?? '') + ' language:"$language"';
+    }
+
+    String excludeKeywords = computeExcludeKeywords();
+    if (excludeKeywords.isNotEmpty) {
+      params['f_search'] = ((params['f_search'] ?? '') + ' ' + excludeKeywords).trim();
     }
 
     if (searchType == SearchType.gallery || searchType == SearchType.watched) {
@@ -227,6 +237,44 @@ class SearchConfig {
     return strs.join(separator);
   }
 
+  /// exclude tags as f_search terms, e.g. `-female:"futanari$"`
+  String computeExcludeKeywords() {
+    List<String> strs = [];
+
+    excludeTags?.forEach((tag) {
+      /// manual input
+      if (tag.namespace.isEmpty) {
+        strs.add(tag.key.contains(' ') ? '-"${tag.key}"' : '-${tag.key}');
+        return;
+      }
+
+      strs.add('-${tag.namespace}:"${tag.key}\$"');
+    });
+
+    return strs.join(' ');
+  }
+
+  String computeExcludeTagKeywords({required bool withTranslation, required String separator}) {
+    List<String> strs = [];
+
+    excludeTags?.forEach((tag) {
+      /// manual input
+      if (tag.namespace.isEmpty) {
+        strs.add('-${tag.key}');
+        return;
+      }
+
+      if (withTranslation && tag.tagName != null) {
+        strs.add('-${tag.translatedNamespace}:${tag.tagName}');
+        return;
+      }
+
+      strs.add('-${tag.namespace}:"${tag.key}\$"');
+    });
+
+    return strs.join(separator);
+  }
+
   int _computeFCats() {
     int fCats = 0;
     if (!includeMisc) {
@@ -277,6 +325,7 @@ class SearchConfig {
       includeMisc: json["includeMisc"],
       keyword: json["keyword"],
       tags: (json["tags"] as List?)?.map((e) => TagData.fromJson(e)).toList(),
+      excludeTags: (json["excludeTags"] as List?)?.map((e) => TagData.fromJson(e)).toList(),
       language: json["language"],
       onlySearchExpungedGalleries: json["searchExpungedGalleries"],
       onlyShowGalleriesWithTorrents: json["onlyShowGalleriesWithTorrents"],
@@ -305,6 +354,7 @@ class SearchConfig {
       "includeMisc": includeMisc,
       "keyword": keyword,
       "tags": tags,
+      "excludeTags": excludeTags,
       "language": language,
       "searchExpungedGalleries": onlySearchExpungedGalleries,
       "onlyShowGalleriesWithTorrents": onlyShowGalleriesWithTorrents,
@@ -332,6 +382,7 @@ class SearchConfig {
     bool? includeMisc,
     String? keyword,
     List<TagData>? tags,
+    List<TagData>? excludeTags,
     String? language,
     bool? searchExpungedGalleries,
     bool? onlyShowGalleriesWithTorrents,
@@ -356,6 +407,7 @@ class SearchConfig {
       includeMisc: includeMisc ?? this.includeMisc,
       keyword: keyword ?? this.keyword,
       tags: tags ?? this.tags?.map((tag) => tag.copyWith()).toList(),
+      excludeTags: excludeTags ?? this.excludeTags?.map((tag) => tag.copyWith()).toList(),
       language: language ?? this.language,
       onlySearchExpungedGalleries: searchExpungedGalleries ?? onlySearchExpungedGalleries,
       onlyShowGalleriesWithTorrents: onlyShowGalleriesWithTorrents ?? this.onlyShowGalleriesWithTorrents,
@@ -371,6 +423,6 @@ class SearchConfig {
 
   @override
   String toString() {
-    return 'SearchConfig{searchType: $searchType, includeDoujinshi: $includeDoujinshi, includeManga: $includeManga, includeArtistCG: $includeArtistCG, includeGameCg: $includeGameCg, includeWestern: $includeWestern, includeNonH: $includeNonH, includeImageSet: $includeImageSet, includeCosplay: $includeCosplay, includeAsianPorn: $includeAsianPorn, includeMisc: $includeMisc, keyword: $keyword, tags: $tags, language: $language, onlySearchExpungedGalleries: $onlySearchExpungedGalleries, onlyShowGalleriesWithTorrents: $onlyShowGalleriesWithTorrents, pageAtLeast: $pageAtLeast, pageAtMost: $pageAtMost, minimumRating: $minimumRating, disableFilterForLanguage: $disableFilterForLanguage, disableFilterForUploader: $disableFilterForUploader, disableFilterForTags: $disableFilterForTags, searchFavoriteCategoryIndex: $searchFavoriteCategoryIndex}';
+    return 'SearchConfig{searchType: $searchType, includeDoujinshi: $includeDoujinshi, includeManga: $includeManga, includeArtistCG: $includeArtistCG, includeGameCg: $includeGameCg, includeWestern: $includeWestern, includeNonH: $includeNonH, includeImageSet: $includeImageSet, includeCosplay: $includeCosplay, includeAsianPorn: $includeAsianPorn, includeMisc: $includeMisc, keyword: $keyword, tags: $tags, excludeTags: $excludeTags, language: $language, onlySearchExpungedGalleries: $onlySearchExpungedGalleries, onlyShowGalleriesWithTorrents: $onlyShowGalleriesWithTorrents, pageAtLeast: $pageAtLeast, pageAtMost: $pageAtMost, minimumRating: $minimumRating, disableFilterForLanguage: $disableFilterForLanguage, disableFilterForUploader: $disableFilterForUploader, disableFilterForTags: $disableFilterForTags, searchFavoriteCategoryIndex: $searchFavoriteCategoryIndex}';
   }
 }

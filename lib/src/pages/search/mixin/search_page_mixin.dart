@@ -117,7 +117,17 @@ mixin SearchPageMixin<L extends SearchPageLogicMixin, S extends SearchPageStateM
               contentPadding: EdgeInsets.zero,
               labelStyle: const TextStyle(fontSize: 15),
               floatingLabelStyle: const TextStyle(fontSize: 10),
-              labelText: state.searchConfig.tags?.isEmpty ?? true ? null : state.searchConfig.computeTagKeywords(withTranslation: false, separator: ' / '),
+              labelText: () {
+                bool hasTags = state.searchConfig.tags?.isNotEmpty ?? false;
+                bool hasExcludeTags = state.searchConfig.excludeTags?.isNotEmpty ?? false;
+                if (!hasTags && !hasExcludeTags) {
+                  return null;
+                }
+                return [
+                  if (hasTags) state.searchConfig.computeTagKeywords(withTranslation: false, separator: ' / '),
+                  if (hasExcludeTags) state.searchConfig.computeExcludeTagKeywords(withTranslation: false, separator: ' / '),
+                ].join('   ');
+              }(),
               prefixIcon: MouseRegion(
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(child: const Icon(Icons.search), onTap: logic.handleClearAndRefresh),

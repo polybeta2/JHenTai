@@ -694,6 +694,8 @@ class pt_BR {
       'watched': 'Assistido',
       'history': 'História',
       'keyword': 'Palavra-chave',
+      'excludeTags': 'Excluir tags',
+      'excludeTagsHint': 'Digite uma tag e pressione enter, ex.: female:futanari',
       'orderBy': 'Order by',
       'favoritedTime': 'Favorited Time',
       'publishedTime': 'Published Time',
