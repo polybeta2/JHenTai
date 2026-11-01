@@ -46,6 +46,7 @@ import 'package:jhentai/src/setting/my_tags_setting.dart';
 import 'package:jhentai/src/setting/network_setting.dart';
 import 'package:jhentai/src/setting/performance_setting.dart';
 import 'package:jhentai/src/setting/preference_setting.dart';
+import 'package:jhentai/src/setting/random_seek_setting.dart';
 import 'package:jhentai/src/setting/read_setting.dart';
 import 'package:jhentai/src/setting/security_setting.dart';
 import 'package:jhentai/src/setting/site_setting.dart';
@@ -100,6 +101,7 @@ List<JHLifeCircleBean> lifeCircleBeans = [
   superResolutionSetting,
   userSetting,
   keyboardShortcutSetting,
+  randomSeekSetting,
   builtInBlockedUserService,
 ];
 

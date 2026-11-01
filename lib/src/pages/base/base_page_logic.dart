@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:extended_image/extended_image.dart';
@@ -14,6 +13,7 @@ import 'package:jhentai/src/model/gallery_page.dart';
 import 'package:jhentai/src/model/search_config.dart';
 import 'package:jhentai/src/service/local_config_service.dart';
 import 'package:jhentai/src/setting/preference_setting.dart';
+import 'package:jhentai/src/widget/eh_random_seek_config_dialog.dart';
 import 'package:jhentai/src/widget/eh_search_config_dialog.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -22,10 +22,12 @@ import '../../mixin/scroll_to_top_logic_mixin.dart';
 import '../../mixin/scroll_to_top_state_mixin.dart';
 import '../../model/gallery.dart';
 import '../../model/gallery_count.dart';
+import '../../model/random_seek_range.dart';
 import '../../network/eh_request.dart';
 import '../../routes/routes.dart';
 import '../../service/local_block_rule_service.dart';
 import '../../service/tag_translation_service.dart';
+import '../../setting/random_seek_setting.dart';
 import '../../setting/user_setting.dart';
 import '../../utils/eh_spider_parser.dart';
 import '../../service/log.dart';
@@ -369,7 +371,7 @@ abstract class BasePageLogic extends GetxController with Scroll2TopLogicMixin {
 
     DateTime landedDate = DateTime.now();
     for (int attempt = 0; attempt < maxAttempts; attempt++) {
-      landedDate = _randomSeekDate();
+      landedDate = randomSeekSetting.randomDate();
       await jumpPage(landedDate);
 
       /// Re-roll when the landing finds nothing, unless the query itself has no
@@ -383,10 +385,17 @@ abstract class BasePageLogic extends GetxController with Scroll2TopLogicMixin {
     toast('randomSeekLanded'.trArgs([DateFormat('yyyy-MM-dd').format(landedDate)]), isCenter: false);
   }
 
-  DateTime _randomSeekDate() {
-    final DateTime firstDate = DateTime(2007);
-    final int totalDays = DateTime.now().difference(firstDate).inDays;
-    return firstDate.add(Duration(days: Random().nextInt(totalDays + 1)));
+  Future<void> handleTapRandomSeekSettingButton() async {
+    List<RandomSeekRange>? result = await Get.dialog(
+      EHRandomSeekConfigDialog(initialRanges: randomSeekSetting.ranges.toList()),
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    await randomSeekSetting.saveRanges(result);
+    toast('saveSuccess'.tr, isCenter: false);
   }
 
   Future<void> handleTapFilterButton([EHSearchConfigDialogType searchConfigDialogType = EHSearchConfigDialogType.filter]) async {
