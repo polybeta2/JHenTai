@@ -195,18 +195,22 @@ class EHSpiderParser {
       return null;
     }
 
+    /// e.g. "Found 277,185 results. Excluded 2 galleries and filtered 3 galleries from this page."
+    int? excludedCount = int.tryParse(RegExp(r'Excluded (\d+) galler').firstMatch(text)?.group(1) ?? '');
+    int? filteredCount = int.tryParse(RegExp(r'filtered (\d+) galler').firstMatch(text)?.group(1) ?? '');
+
     if (text.contains('hundreds of')) {
-      return const GalleryCount(type: GalleryCountType.hundreds);
+      return GalleryCount(type: GalleryCountType.hundreds, excludedCount: excludedCount, filteredCount: filteredCount);
     }
     if (text.contains('thousands of')) {
-      return const GalleryCount(type: GalleryCountType.thousands);
+      return GalleryCount(type: GalleryCountType.thousands, excludedCount: excludedCount, filteredCount: filteredCount);
     }
 
     String? count = RegExp(r'([\d,\\+]+)').firstMatch(text)?.group(1);
     if (count == null) {
       return null;
     }
-    return GalleryCount(type: GalleryCountType.accurate, count: count);
+    return GalleryCount(type: GalleryCountType.accurate, count: count, excludedCount: excludedCount, filteredCount: filteredCount);
   }
 
   static List<dynamic> ranklistPage2GalleryPageInfo(Headers headers, dynamic data) {

@@ -751,6 +751,8 @@ class ru_RU {
       'openGallery': 'Открыть галерею',
       'tapChip2Delete': 'Нажмите на чип для удаления\nДолгий тап на кнопку для удаления всего',
       'accurateCountTemplate': '%s результатов',
+      'excludedCountTemplate': 'исключено: %s',
+      'filteredCountTemplate': 'отфильтровано: %s',
       'hundredsOfCountTemplate': 'Сотни результатов',
       'thousandsOfCountTemplate': 'Тысячи результатов',
 

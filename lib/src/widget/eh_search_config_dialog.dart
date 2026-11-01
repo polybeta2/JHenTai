@@ -317,14 +317,21 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
                 scrollController: _suggestionScrollController,
                 currentKeyword: keyword,
                 suggestions: suggestions,
-                onTapSuggestion: (TagData tagData) {
+                onTapSuggestion: (TagAutoCompletionMatch match) {
                   hideSuggestions();
+
+                  /// `-` prefix means the user wants to exclude this tag
+                  if (match.operator == '-') {
+                    _translateAndAddExcludeTag(match.tagData);
+                    return;
+                  }
+
                   if (onTapTag != null) {
-                    onTapTag(tagData);
+                    onTapTag!(match.tagData);
                     return;
                   }
                   searchConfig.keyword = '';
-                  addSearchTag(tagData);
+                  addSearchTag(match.tagData);
                 },
               ),
             ).fadeIn(),
@@ -861,7 +868,7 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
               ),
               controller: excludeTextController,
               onTap: hideSuggestions,
-              onChanged: (keyword) => waitAndSearchTags(keyword, link: excludeLayerLink, onTapTag: addExcludeTag),
+              onChanged: (keyword) => waitAndSearchTags(keyword, link: excludeLayerLink, onTapTag: _translateAndAddExcludeTag),
               onSubmitted: (keyword) {
                 hideSuggestions();
                 _addExcludeTagFromRawKeyword(keyword);
@@ -980,7 +987,7 @@ class _EHSearchConfigDialogState extends State<EHSearchConfigDialog> {
 class SearchSuggestionList extends StatelessWidget {
   final String currentKeyword;
   final List<TagAutoCompletionMatch> suggestions;
-  final ValueChanged<TagData> onTapSuggestion;
+  final ValueChanged<TagAutoCompletionMatch> onTapSuggestion;
   final ScrollController scrollController;
 
   const SearchSuggestionList({
@@ -1023,7 +1030,7 @@ class SearchSuggestionList extends StatelessWidget {
                       const TextStyle(fontSize: UIConfig.searchDialogSuggestionSubTitleTextSize, color: UIConfig.searchPageSuggestionHighlightColor),
                       singleLine: true,
                     ),
-              onTap: () => onTapSuggestion(suggestions[index].tagData),
+              onTap: () => onTapSuggestion(suggestions[index]),
             ),
           );
         },

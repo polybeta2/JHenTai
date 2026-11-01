@@ -742,6 +742,8 @@ class ko_KR {
       'openGallery': 'Open Gallery',
       'tapChip2Delete': 'Tap chip to delete\nLong press button to delete all',
       'accurateCountTemplate': '%s results',
+      'excludedCountTemplate': '%s개 제외됨',
+      'filteredCountTemplate': '%s개 필터링됨',
       'hundredsOfCountTemplate': 'Hundreds of results',
       'thousandsOfCountTemplate': 'Thousands of results',
 

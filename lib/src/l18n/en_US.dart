@@ -742,6 +742,8 @@ class en_US {
       'openGallery': 'Open Gallery',
       'tapChip2Delete': 'Tap chip to delete\nLong press button to delete all',
       'accurateCountTemplate': '%s results',
+      'excludedCountTemplate': '%s excluded',
+      'filteredCountTemplate': '%s filtered',
       'hundredsOfCountTemplate': 'Hundreds of results',
       'thousandsOfCountTemplate': 'Thousands of results',
 

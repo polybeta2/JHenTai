@@ -4,22 +4,32 @@ class GalleryCount {
   final String? count;
   final GalleryCountType type;
 
-  const GalleryCount({this.count, required this.type});
+  /// galleries excluded by search exclude terms (f_search `-` terms), parsed from searchtext
+  final int? excludedCount;
+
+  /// galleries filtered by account-level settings (e.g. mytags hide), parsed from searchtext
+  final int? filteredCount;
+
+  const GalleryCount({this.count, required this.type, this.excludedCount, this.filteredCount});
 
   String toPrintString() {
-    switch (type) {
-      case GalleryCountType.accurate:
-        return 'accurateCountTemplate'.trArgs([count!]);
-      case GalleryCountType.hundreds:
-        return 'hundredsOfCountTemplate'.tr;
-      case GalleryCountType.thousands:
-        return 'thousandsOfCountTemplate'.tr;
-    }
+    String countString = switch (type) {
+      GalleryCountType.accurate => 'accurateCountTemplate'.trArgs([count!]),
+      GalleryCountType.hundreds => 'hundredsOfCountTemplate'.tr,
+      GalleryCountType.thousands => 'thousandsOfCountTemplate'.tr,
+    };
+
+    List<String> filters = [
+      if ((excludedCount ?? 0) > 0) 'excludedCountTemplate'.trArgs(['$excludedCount']),
+      if ((filteredCount ?? 0) > 0) 'filteredCountTemplate'.trArgs(['$filteredCount']),
+    ];
+
+    return filters.isEmpty ? countString : '$countString(${filters.join(', ')})';
   }
 
   @override
   String toString() {
-    return 'GalleryCount{count: $count, type: $type}';
+    return 'GalleryCount{count: $count, type: $type, excludedCount: $excludedCount, filteredCount: $filteredCount}';
   }
 }
 

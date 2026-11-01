@@ -748,6 +748,8 @@ favnote：配對收藏備註
       'openGallery': '打開畫廊',
       'tapChip2Delete': '點擊標籤刪除單條\n長按按鈕刪除全部',
       'accurateCountTemplate': '%s個結果',
+      'excludedCountTemplate': '已排除%s個',
+      'filteredCountTemplate': '已過濾%s個',
       'hundredsOfCountTemplate': '數百個結果',
       'thousandsOfCountTemplate': '數千個結果',
 
